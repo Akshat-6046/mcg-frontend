@@ -15,7 +15,7 @@ const GoogleLoginButton = () => {
 
   const handleSuccess = async (response: CredentialResponse) => {
     const token = response.credential;
-    await fetch("/hiGoogleAuthEndpoint", { token });
+    await fetch("/hiGoogleAuthEndpoint", { token }, false);
 
     if (data) {
       const { token } = data as OAuthResponse;

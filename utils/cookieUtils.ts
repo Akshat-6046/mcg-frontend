@@ -1,7 +1,7 @@
 import Cookies from "js-cookie";
 
 const defaultCookieOptions: Cookies.CookieAttributes = {
-  expires: 0.01,
+  expires: 10,
   path: "/",
 };
 

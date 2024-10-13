@@ -39,7 +39,7 @@ export const Form = styled.div`
   transform: translate(-50%, 0%);
   color: #fff;
   opacity: 1;
-  width: 400px;
+  width: 412px;
   & .MuiTab-textColorPrimary {
     color: #fff;
   }

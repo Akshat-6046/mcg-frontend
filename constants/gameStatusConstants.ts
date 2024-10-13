@@ -1,0 +1,9 @@
+export enum ChessStatusEnum {
+    IN_CHECK = "IN_CHECK",
+    CHECK_MATE = "CHECK_MATE",
+    STALE_MATE = "STALE_MATE",
+    DRAW = "DRAW",
+    NORMAL = "NORMAL",
+    GAME_OVER = "GAME_OVER",
+    DRAW_BY_REPETITION = "DRAW_BY_REPETITON",
+  }

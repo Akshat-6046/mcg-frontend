@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-
 import { Tab, Tabs } from "@mui/material";
+
 import {
   Container,
   Form,
@@ -19,6 +19,16 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import useRequest from "@/hooks/useRequest";
 import { setCookie } from "@/utils/cookieUtils";
 import VerifyOTP from "@/Components/VerifyOTP";
+import { endpoints } from "@/constants/endpoints";
+import { toast } from "react-toastify";
+
+import "react-toastify/dist/ReactToastify.css";
+import Loader from "@/Components/Loader";
+import { ApiConstants } from "@/constants/apiContants";
+import withAuth from "@/hocs/withRouteAuth";
+import { navigateToHome } from "@/utils/navigationUtils";
+import { useRouter } from "next/navigation";
+
 interface UserAuthObject {
   token: string;
 }
@@ -35,7 +45,8 @@ const UserOnboard = (): React.ReactElement => {
   const [otpError, setOtpError] = useState(false);
 
   const [isLoginScreen, setIsLoginScreen] = useState(true);
-  const { refetch: fetch, error, loadingState, data } = useRequest();
+  const { refetch: fetch, loadingState } = useRequest();
+  const router = useRouter();
 
   const resetErrors = (): void => {
     setEmailError(false);
@@ -59,27 +70,33 @@ const UserOnboard = (): React.ReactElement => {
 
   const validateSignupFields = (): boolean => {
     let hasError = false;
+
     if (email.length === 0) {
       setEmailError(true);
       hasError = true;
     }
+
     if (password.length === 0) {
       setPasswordError(true);
       hasError = true;
     }
+
     if (confirmPassword.length === 0) {
       setConfirmPasswordError(true);
       hasError = true;
     }
+
     if (password !== confirmPassword) {
       setConfirmPasswordError(true);
       hasError = true;
     }
+
     return !hasError;
   };
 
   const validateOtp = (): boolean => {
     let hasError = false;
+
     otp.forEach((item) => {
       if (!new RegExp(/[0-9]{1}/g).test(item)) {
         hasError = true;
@@ -98,17 +115,19 @@ const UserOnboard = (): React.ReactElement => {
     setConfirmPasswordError(false);
   };
 
-  const onSuccess = (): void => {
+  const onSuccess = (resData: any): void => {
     if (selectedTab === 1 && isLoginScreen) {
       setIsLoginScreen(false);
-    } else {
-      const { token } = data as unknown as UserAuthObject;
+    } else if (resData) {
+      const { token } = resData as unknown as UserAuthObject;
       setCookie("token", token);
+      toast.success("Success!");
+      navigateToHome(router);
     }
   };
 
-  const onFailure = (): void => {
-    console.log("Error");
+  const onFailure = (err: Error): void => {
+    toast.error(`Error: ${err}`);
   };
 
   const handleSubmit = async (): Promise<void> => {
@@ -117,7 +136,7 @@ const UserOnboard = (): React.ReactElement => {
 
     if (selectedTab === 0) {
       if (validateLoginFields()) {
-        reqUrl = "hnjn/login";
+        reqUrl = endpoints.USER_LOGIN;
         reqObj = {
           email,
           password,
@@ -125,7 +144,7 @@ const UserOnboard = (): React.ReactElement => {
       }
     } else if (selectedTab === 1 && isLoginScreen) {
       if (validateSignupFields()) {
-        reqUrl = "jbjhj/signup";
+        reqUrl = endpoints.USER_SIGNUP;
         reqObj = {
           email,
           password,
@@ -133,22 +152,17 @@ const UserOnboard = (): React.ReactElement => {
       }
     } else {
       if (validateOtp()) {
-        reqUrl = "/ottototp";
+        reqUrl = endpoints.VERIFY_USER_SIGNUP;
         reqObj = {
           email,
-          otp,
+          otp: otp.join(""),
         };
       }
     }
 
     if (reqUrl) {
       resetErrors();
-      await fetch(reqUrl, reqObj);
-      if (data) {
-        onSuccess();
-      } else {
-        onSuccess();
-      }
+      await fetch(reqUrl, reqObj, false, "POST", onSuccess, onFailure);
     }
   };
 
@@ -210,7 +224,11 @@ const UserOnboard = (): React.ReactElement => {
 
             <ButtonContainer>
               <StyledButton variant="outlined" onClick={handleSubmit}>
-                Submit
+                {loadingState === ApiConstants.API_FETCHING ? (
+                  <Loader color=" var(--blue-500)" height="26" width="26" />
+                ) : (
+                  "Submit"
+                )}
               </StyledButton>
             </ButtonContainer>
             <OAuthButtonContainer>
@@ -222,5 +240,4 @@ const UserOnboard = (): React.ReactElement => {
     </GoogleOAuthProvider>
   );
 };
-
-export default UserOnboard;
+export default withAuth(UserOnboard);
